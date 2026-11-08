@@ -1,0 +1,10 @@
+# Never commit the browser source or build output - they are tens of GB
+build/
+out/
+*.exe
+*.7z
+*.zip
+__pycache__/
+*.pyc
+.vscode/
+.idea/
