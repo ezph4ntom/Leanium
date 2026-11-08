@@ -8,7 +8,7 @@ next to the real Helium, with Chromium's **built-in password manager enabled**.
 
 > **Unofficial.** Leanium is a hobby project. It is not affiliated with, endorsed by, or supported by
 > the Helium project, imput, or Google. This repository contains **no browser source code and no
-> binaries** — only a script that edits Helium's build recipe, plus the logo assets.
+> binaries**, only a script that edits Helium's build recipe, plus the logo assets.
 
 ## What it changes
 
@@ -25,8 +25,7 @@ Helium's own copyright notices ("The Helium Authors") and licence headers are le
 ## How it works
 
 Helium is Chromium plus a list of patches. This project does not fork that list; it edits it
-automatically with one idempotent script, so the same steps can be repeated on every new Helium
-release:
+automatically with one script, so the same steps can be repeated on every new Helium release:
 
 1. Clone Helium's Windows build repo at a release tag.
 2. Run `scripts/apply.py` to rename, re-brand and enable the password manager.
@@ -47,8 +46,8 @@ py -3.12 build.py
 py -3.12 package.py
 ```
 
-(Run the build from an administrator *Developer Command Prompt for VS 2022*. Replace
-`ezph4ntom` with the account that hosts this repository. The first build takes a few hours.)
+(Run the build from an administrator *Developer Command Prompt for VS 2022*. The first 
+build takes a few hours.)
 
 Tested with Helium **0.21.1.1** (Chromium 157) on Windows 11, x64.
 
