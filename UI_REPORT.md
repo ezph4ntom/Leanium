@@ -138,3 +138,9 @@ All of them install over your current Leanium (same install IDs), not next to it
 leanium://setup showed Helium's asterisk (logo and tab icon). Fixed in `9e12157` (rename_deps.py swaps in the cup).
 New installer: `C:\h\helium-windows\build\ui-tiers\tierB2\Leanium-0.21.3.1-ui-tierB2-x64-installer.exe`, SHA-256 `a3fa7a2e67aa55fc136f6e5d5268fddc8ab1a96261429d4b36e9b4c35e78dec8`. Same as Tier B plus this fix; all 10 checks pass. Screenshots: `ui-screenshots/tierB2/`.
 
+
+## Follow-up: setup page colours (2026-11-17)
+
+The setup page's blue colour tokens (buttons, links, toggles, animated background) now use the cup's hue (`0638d51`, rename_deps.py), keeping lightness and saturation.
+New installer (Tier B + setup logo + setup colours): `C:\h\helium-windows\build\ui-tiers\tierB3\Leanium-0.21.3.1-ui-tierB3-x64-installer.exe`, SHA-256 `8d5eac205eb5aaa8c56212f05f4c71fecd66dcdf8bbe6147f70ffe8d668dd597`. All 10 checks pass. Screenshots of every setup step: `ui-screenshots/tierB3/`.
+
