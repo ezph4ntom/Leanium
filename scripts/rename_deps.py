@@ -7,7 +7,7 @@ and before translations are added, so the renamed text still matches the renamed
 update_src.py calls it for an already prepared build\\src. Idempotent.
 
 Usage: python rename_deps.py <build\\src folder>"""
-import re, sys
+import colorsys, re, sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -50,8 +50,38 @@ def replace_logos(src: Path):
     print(f"  rename_deps: replaced {changed} setup-page logo file(s) with the cup")
 
 
+PRISM_CSS = "components/helium_onboarding/node_modules/@imput/helium-prism/dist/styles.css"
+LEANIUM_HUE = colorsys.rgb_to_hls(0xB0 / 255, 0x48 / 255, 0xC4 / 255)[0]   # the cup purple #B048C4
+HEX = re.compile(r"#([0-9a-fA-F]{6})\b")
+
+
+def _to_leanium_hue(m):
+    r, g, b = (int(m.group(1)[i:i + 2], 16) / 255 for i in (0, 2, 4))
+    h, l, s = colorsys.rgb_to_hls(r, g, b)
+    if s <= 0.12 or not 0.55 < h < 0.72:      # only Helium's blues; greys/white untouched
+        return m.group(0)
+    r, g, b = colorsys.hls_to_rgb(LEANIUM_HUE, l, s)
+    return "#%02x%02x%02x" % tuple(round(c * 255) for c in (r, g, b))
+
+
+def recolor_setup_page(src: Path):
+    """Give the setup page the cup's colours: every blue colour token of its design library (buttons, links,
+    animated background, tooltips) gets the cup's hue, keeping its lightness and saturation."""
+    p = src / PRISM_CSS
+    if not p.exists():
+        print(f"  rename_deps: not found (upstream changed?): {PRISM_CSS}")
+        return
+    t = p.read_text(encoding="utf-8")
+    n = HEX.sub(_to_leanium_hue, t)
+    if n != t:
+        p.write_text(n, encoding="utf-8", newline="")
+        (src / "components/helium_onboarding/index.html").touch()   # make vite rebuild the page
+    print(f"  rename_deps: setup-page colours {'recoloured to the cup purple' if n != t else 'already purple'}")
+
+
 def rename(src: Path):
     replace_logos(src)
+    recolor_setup_page(src)
     changed = 0
     for rel in FILES:
         p = src / rel
