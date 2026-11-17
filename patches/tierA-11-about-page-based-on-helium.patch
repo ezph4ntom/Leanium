@@ -1,0 +1,15 @@
+--- a/chrome/browser/resources/settings/about_page/about_page.html.ts
++++ b/chrome/browser/resources/settings/about_page/about_page.html.ts
+@@ -101,6 +101,12 @@
+     <div class="info-section">
+       <div class="secondary">$i18nRaw{aboutProductLicense}</div>
+     </div>
++
++    <div class="info-section" id="leaniumAbout">
++      <div class="secondary">Leanium, based on Helium.
++        <a href="https://github.com/ezph4ntom/leanium" target="_blank">github.com/ezph4ntom/leanium</a>
++      </div>
++    </div>
+ <if expr="_google_chrome or _is_chrome_for_testing_branded">
+     <div class="secondary">
+       <a id="tos" href="$i18n{aboutTermsURL}">$i18n{aboutProductTos}</a>

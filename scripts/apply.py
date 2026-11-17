@@ -78,6 +78,8 @@ def main():
 
     # 2. rename inside patches (same line counts -> hunks stay valid)
     pats = list((hc / "patches").rglob("*.patch")) + list((repo / "patches").rglob("*.patch"))
+    # Leanium's own patches (step 7) are already Leanium text; some mention Helium on purpose.
+    pats = [p for p in pats if p.parent.name != "leanium"]
     for p in pats:
         if p.name in SKIP or "password-manager.patch" == p.name and "disable" in p.name: continue
         t = rd(p); n = ren(t)
