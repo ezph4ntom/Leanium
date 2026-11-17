@@ -132,3 +132,9 @@ All of them install over your current Leanium (same install IDs), not next to it
 - Test logins used a random dummy password. The exported CSV was deleted at once, and every test profile was deleted.
 - Test tools (not in the repo): `C:\h\ui-test\zen2.py` (screenshots, tests, frameless check), `sxs.py`,
   `compare_builds.py`, `build_tier.bat`. `pip install websocket-client` was used for them.
+
+## Follow-up: setup page logo (2026-11-17)
+
+leanium://setup showed Helium's asterisk (logo and tab icon). Fixed in `9e12157` (rename_deps.py swaps in the cup).
+New installer: `C:\h\helium-windows\build\ui-tiers\tierB2\Leanium-0.21.3.1-ui-tierB2-x64-installer.exe`, SHA-256 `a3fa7a2e67aa55fc136f6e5d5268fddc8ab1a96261429d4b36e9b4c35e78dec8`. Same as Tier B plus this fix; all 10 checks pass. Screenshots: `ui-screenshots/tierB2/`.
+
