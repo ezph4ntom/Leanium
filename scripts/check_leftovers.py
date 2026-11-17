@@ -16,7 +16,13 @@ brotli compressed resources first. It searches, in UTF-8 and UTF-16, for:
   - "helium://" (the old internal-page address)
   - "Leannium" (the old misspelling)
 Intentional mentions (credits/licence text, "The Helium Authors", "Helium-bin") are listed as allowed.
-The NSIS installer itself is compressed and is not scanned; apply.py edits installer\\helium.nsi.
+
+Installer check (also run automatically for a <helium-windows folder>, on the newest build\\*x64-installer.exe):
+  py -3.12 check_leftovers.py --installer <installer.exe or helium-windows folder> [--seven-zip <7z.exe>]
+It extracts setup.exe from the NSIS installer with 7-Zip (it does not install anything) and checks the names
+Windows will show: the uninstall entry name and the Start-menu shortcut name (setup.exe's IDS_PRODUCT_NAME
+strings, every language), the Start-menu apps folder name, the uninstall registry key name and the
+installer's own version info. All must say Leanium and none may say Helium.
 Exit code: 0 = nothing unexpected, 1 = leftovers found, 2 = error."""
 import gzip, re, shutil, struct, subprocess, sys, zipfile
 from collections import defaultdict
@@ -164,7 +170,129 @@ def src_version(repo):
         return ""
 
 
+def _win_strings(exe):
+    """All RT_STRING entries of a Windows executable as {id: text} (loaded as data, never run)."""
+    import ctypes
+    k = ctypes.windll.kernel32
+    for f, res in (("LoadLibraryExW", ctypes.c_void_p), ("FindResourceW", ctypes.c_void_p),
+                   ("LoadResource", ctypes.c_void_p), ("LockResource", ctypes.c_void_p)):
+        getattr(k, f).restype = res
+    k.FindResourceW.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p]
+    k.LoadResource.argtypes = k.SizeofResource.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
+    k.LockResource.argtypes = [ctypes.c_void_p]; k.FreeLibrary.argtypes = [ctypes.c_void_p]
+    mod = k.LoadLibraryExW(str(exe), None, 0x2 | 0x20)  # LOAD_LIBRARY_AS_DATAFILE | AS_IMAGE_RESOURCE
+    if not mod:
+        raise OSError(f"cannot read resources of {exe}")
+    blocks = []
+    cb_type = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p)
+    cb = cb_type(lambda m, t, name, p: (blocks.append(name) if name and name < 0x10000 else None) or True)
+    k.EnumResourceNamesW.argtypes = [ctypes.c_void_p, ctypes.c_void_p, cb_type, ctypes.c_void_p]
+    k.EnumResourceNamesW(mod, ctypes.c_void_p(6), cb, None)  # RT_STRING
+    out = {}
+    for b in blocks:
+        r = k.FindResourceW(mod, ctypes.c_void_p(b), ctypes.c_void_p(6))
+        data = ctypes.string_at(k.LockResource(k.LoadResource(mod, r)), k.SizeofResource(mod, r))
+        pos = 0
+        for i in range(16):
+            n = struct.unpack_from("<H", data, pos)[0]; pos += 2
+            if n:
+                out[(b - 1) * 16 + i] = data[pos:pos + 2 * n].decode("utf-16-le")
+            pos += 2 * n
+    k.FreeLibrary(mod)
+    return out
+
+
+def _version_info(exe):
+    import ctypes
+    v = ctypes.windll.version
+    size = v.GetFileVersionInfoSizeW(str(exe), None)
+    if not size:
+        return {}
+    buf = ctypes.create_string_buffer(size); v.GetFileVersionInfoW(str(exe), 0, size, buf)
+    p, n = ctypes.c_void_p(), ctypes.c_uint()
+    v.VerQueryValueW(buf, "\\VarFileInfo\\Translation", ctypes.byref(p), ctypes.byref(n))
+    lang, cp = struct.unpack("<HH", ctypes.string_at(p, 4)) if n.value else (0x409, 1200)
+    info = {}
+    for key in ("ProductName", "FileDescription", "CompanyName"):
+        if v.VerQueryValueW(buf, f"\\StringFileInfo\\{lang:04x}{cp:04x}\\{key}", ctypes.byref(p), ctypes.byref(n)) and n.value:
+            info[key] = ctypes.wstring_at(p, n.value).rstrip("\x00")
+    return info
+
+
+def check_installer(target, seven_zip=None):
+    """Validate the names an installed Leanium shows in Windows. Returns the number of problems."""
+    import tempfile
+    target = Path(target)
+    if target.is_dir():
+        cands = sorted((target / "build").glob("*x64-installer.exe"), key=lambda p: p.stat().st_mtime)
+        if not cands:
+            print("\nInstaller check: no build\\*x64-installer.exe found (run package.py); skipped.")
+            return 0
+        target = cands[-1]
+    seven_zip = seven_zip or shutil.which("7z") or r"C:\Program Files\7-Zip\7z.exe"
+    print(f"\nInstaller check: {target}")
+    problems = []
+    def expect(what, value, ok):
+        print(f"  [{'ok' if ok else 'PROBLEM'}] {what}: {value!r}")
+        if not ok:
+            problems.append(what)
+    word = re.compile(r"(?<![A-Za-z0-9_])Helium(?![A-Za-z0-9_])")
+    vi = _version_info(target)
+    expect("installer ProductName", vi.get("ProductName"), "Leanium" in (vi.get("ProductName") or "") and not word.search(vi.get("ProductName") or ""))
+    expect("installer FileDescription", vi.get("FileDescription"), not word.search(vi.get("FileDescription") or ""))
+    with tempfile.TemporaryDirectory() as tmp:
+        r = subprocess.run([seven_zip, "e", str(target), f"-o{tmp}", "-y", r"$TEMP\helium_install\setup.exe"],
+                           capture_output=True, text=True)
+        setup = Path(tmp) / "setup.exe"
+        if r.returncode != 0 or not setup.exists():
+            print(f"  [PROBLEM] could not extract setup.exe with {seven_zip}: {r.stderr.strip()[:200]}")
+            return 1
+        strings = _win_strings(setup)
+        data = setup.read_bytes()
+        ids = {}
+        hdr = None
+        for root in (target.parent.parent, target.parent.parent.parent):
+            h = root / "build/src/out/Default/gen/chrome/installer/util/installer_util_strings.h"
+            if h.exists():
+                hdr = h
+                break
+        if hdr:
+            ids = {m[0]: int(m[1]) for m in re.findall(r"#define (IDS_\w+?) (\d+)", hdr.read_text())}
+        def group(prefix):
+            return {name[len(prefix):]: strings.get(i) for name, i in ids.items()
+                    if name.startswith(prefix) and name[len(prefix):].isupper() and i in strings}
+        names = group("IDS_PRODUCT_NAME_")
+        if names:
+            en = names.get("EN_US")
+            expect("uninstall entry name (Apps & features), en-US", en, en == "Leanium")
+            expect("Start-menu shortcut name, en-US", en, en == "Leanium")
+            bad = {l: s for l, s in names.items() if "Leanium" not in s or word.search(s)}
+            expect(f"product name in all {len(names)} languages", "all Leanium" if not bad else bad, not bad)
+            sub = group("IDS_APP_SHORTCUTS_SUBDIR_NAME_")
+            if sub:
+                bad = {l: s for l, s in sub.items() if word.search(s)}
+                expect("Start-menu apps folder name, en-US", sub.get("EN_US"), not bad and "Leanium" in (sub.get("EN_US") or ""))
+        else:
+            print("  (installer_util_strings.h not found: checking all setup.exe strings instead)")
+            expect("a setup.exe string that is exactly 'Leanium'", "found" if "Leanium" in strings.values() else None,
+                   "Leanium" in strings.values())
+        hits = sorted({s for s in strings.values() if word.search(s) and not ALLOWED_RE.search(s)})
+        expect(f"visible 'Helium' in setup.exe's {len(strings)} strings", hits[:5], not hits)
+        key = "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\".encode("utf-16-le")
+        product = "\x00Leanium\x00".encode("utf-16-le")[2:-2]
+        expect("uninstall registry key ...\\Uninstall\\<product>", "...\\Uninstall\\Leanium" if (key in data and product in data) else None,
+               key in data and product in data)
+    print(f"  Installer check: {'OK' if not problems else str(len(problems)) + ' problem(s)'}")
+    return len(problems)
+
+
 def main():
+    if "--installer" in sys.argv:
+        args = [a for a in sys.argv[1:] if not a.startswith("--")]
+        sz = None
+        if "--seven-zip" in sys.argv:
+            sz = sys.argv[sys.argv.index("--seven-zip") + 1]; args.remove(sz)
+        return 1 if check_installer(args[0], sz) else 0
     if "--src-version" in sys.argv:
         v = src_version(sys.argv[-1])
         if v:
@@ -249,10 +377,16 @@ def main():
             print(f"   {n}x  {snip}")
     if comments:
         print(f"Ignored {comments} mention(s) inside code comments (never shown to users).")
+    installer_problems = 0
+    if target.is_dir() and (target / "build.py").exists():
+        installer_problems = check_installer(target)
     if total:
         print(f"\nRESULT: {total} leftover(s) found in {len(bad) + len(locale)} place(s).")
         print("Strings in locales\\*.pak come from translation files; text in chrome.dll / resources.pak"
               " comes from C++ or WebUI code. Search the patches for the snippet to find the source.")
+        return 1
+    if installer_problems:
+        print("\nRESULT: no leftover Helium text in the build, but the installer check found problems (see above).")
         return 1
     print("\nRESULT: no leftover Helium text found.")
     return 0

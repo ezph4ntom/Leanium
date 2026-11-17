@@ -79,6 +79,9 @@ py -3.12 leanium\scripts\check_leftovers.py .
 It opens the newest `build\*-windows.zip` and searches every file and every translated string and
 WebUI page inside it for "Helium", `helium://` and "Leannium". Credits/licence text and copyright
 notices are allowed on purpose. It ends with `RESULT: no leftover Helium text found.` or a list.
+Given the `helium-windows` folder it also checks the newest installer (without installing it): the uninstall
+entry and Start-menu names, the uninstall registry key and the installer's version info must say Leanium.
+Only the installer: `py -3.12 leanium\scripts\check_leftovers.py --installer <installer.exe>`.
 
 ## Troubleshooting
 
