@@ -7,11 +7,16 @@ and before translations are added, so the renamed text still matches the renamed
 update_src.py calls it for an already prepared build\\src. Idempotent.
 
 Usage: python rename_deps.py <build\\src folder>"""
-import sys
+import re, sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from apply import ren  # the same rename rule apply.py uses for the patches and translations
+
+# uBlock's filter lists are Helium's own lists: name them honestly. The pattern also matches its own
+# output after ren() ("Leanium filters (via Leanium)"), so running this twice changes nothing.
+FILTER_LISTS = re.compile(r"Leanium filters(?: \(via Leanium\))?")
+FILTER_LISTS_NAME = "Helium filters (via Leanium)"
 
 FILES = [
     "components/helium_onboarding/helium_onboarding_strings.grdp",  # all setup-page text ("Meet Helium", ...)
@@ -31,6 +36,8 @@ def rename(src: Path):
             continue
         t = p.read_bytes().decode("utf-8")
         n = ren(t)
+        if rel.endswith("assets.json"):
+            n = FILTER_LISTS.sub(FILTER_LISTS_NAME, n)
         if n != t:
             p.write_bytes(n.encode("utf-8"))
             changed += 1

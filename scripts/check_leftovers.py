@@ -26,6 +26,8 @@ ALLOWED = [r"The Helium Authors", r"Helium-bin", r"opensource_project.{0,6}Heliu
            r"component of Helium", r"based on Helium", r"github\.com/imputnet/helium",
            # credits page (leanium://credits): correct attribution of the project Leanium is built on
            r"Helium source code is available", r'class="title">Helium<',
+           # uBlock Origin's filter lists are Helium's lists, named as such on purpose
+           r"Helium filters \(via Leanium\)",
            # data that merely contains the word: USB/PCI device names, the public domain-suffix list
            r"Bus for Helium", r"Helium TLDs"]
 EXAMPLES = 10**9 if "--all" in sys.argv else 5
