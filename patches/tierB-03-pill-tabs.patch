@@ -23,3 +23,27 @@
    // Do not show separators if the tab strip is in a decluttered state.
    if (features::IsTabStripDeclutterEnabled() &&
        delegate_->GetTabCount() >=
+@@ -779,6 +788,23 @@
+ 
+   canvas->ClipPath(fill_path, true);
+ 
++  // Leanium: inactive tabs show as faint pills too (the active tab's colour at
++  // low opacity), so the tab strip reads as a row of capsules.
++  if (selection_state == TabStyle::TabSelectionState::kInactive &&
++      !fill_id.has_value() && !delegate_->IsGlassFrame() &&
++      !helium::ShouldUseNativeFrameMaterials(
++          delegate_->GetBrowserWindowInterface())) {
++    cc::PaintFlags faint_flags;
++    faint_flags.setAntiAlias(true);
++    faint_flags.setColor(SkColorSetA(
++        GetCurrentTabBackgroundColor(TabStyle::TabSelectionState::kActive,
++                                     /*hovered=*/false),
++        0x46));
++    canvas->DrawRect(gfx::ScaleToEnclosingRect(
++                         delegate_->GetView()->GetLocalBounds(), scale),
++                     faint_flags);
++  }
++
+   if (ShouldPaintTabBackgroundColor(selection_state, fill_id.has_value())) {
+     cc::PaintFlags flags;
+     flags.setAntiAlias(true);
