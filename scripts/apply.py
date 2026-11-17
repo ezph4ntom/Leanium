@@ -104,6 +104,16 @@ def main():
         t = rd(p); n = ren(t.replace('PRODUCT_NAME "Helium"', 'PRODUCT_NAME "Leanium"').replace(GUID_OLD, GUID_NEW))
         write(p, n, t, a.dry)
 
+    # 4a. installer file name: Leanium-<version>-x64-installer.exe (was helium_<version>_x64-installer.exe)
+    p = repo / "package.py"
+    if p.exists():
+        t = rd(p)
+        n = t.replace("output_dir / f'helium_{version}_{target_cpu}-installer.exe'",
+                      "output_dir / f'Leanium-{version}-{target_cpu}-installer.exe'")
+        if n == t and "f'Leanium-{version}-{target_cpu}-installer.exe'" not in t:
+            print("WARNING: package.py changed upstream; the installer keeps Helium's file name")
+        write(p, n, t, a.dry)
+
     # 4b. Windows fix: 7-Zip can create symlinks that raise "Access is denied" in the merge step
     p = hc / "utils/_extraction.py"
     if p.exists():

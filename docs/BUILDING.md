@@ -63,8 +63,9 @@ you can resume; once the source is prepared, resume with `py -3.12 build.py --ci
 of preparing everything again. (`--ci` skips the preparation; its number is a start time, and a time in
 the year 2100 keeps its 5.5-hour limit from ever stopping the build.)
 
-The installer is written to `build\helium_<version>_x64-installer.exe`; the name still says
-"helium" but the program inside is Leanium. Install it **for the current user only**.
+The installer is written to `build\Leanium-<version>-x64-installer.exe` (`apply.py` renames it in
+`package.py`; the mini-installer and portable zip keep Helium's file names). Install it **for the
+current user only**.
 
 `scripts\update.bat` does all of this (and updating to a new Helium release) in one command; see
 [UPDATING.md](UPDATING.md).
