@@ -61,7 +61,8 @@ Helium unchanged.
 
 - **No automatic updates.** Watch this repository's releases (*Watch → Custom → Releases*) to be
   told when a new build is out. New builds follow Helium releases, which carry Chromium security fixes.
-- **Passwords stay on this PC.** There is no sync. Back them up from
+- **Passwords stay on this PC.** They are not synced anywhere (the password settings page says so
+  too). Back them up now and then from
   *Settings → Autofill and passwords → Password Manager → Settings → Export passwords*.
 - **Unofficial.** Leanium is a personal project. It is not affiliated with or supported by the Helium
   project, imput, or Google.

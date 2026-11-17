@@ -1,0 +1,49 @@
+--- a/chrome/browser/ui/views/tabs/common/horizontal_tab_style_views.cc
++++ b/chrome/browser/ui/views/tabs/common/horizontal_tab_style_views.cc
+@@ -132,6 +132,10 @@
+       tab_height -= GetLayoutConstant(LayoutConstant::kTabStripPadding) * scale;
+       tab_height -=
+           GetLayoutConstant(LayoutConstant::kTabstripToolbarOverlap) * scale;
++      // Leanium: pill-shaped tabs (fully rounded ends) instead of squarcles.
++      const float pill_radius = std::max(content_corner_radius, tab_height / 2);
++      top_left_corner_radius = top_right_corner_radius = pill_radius;
++      bottom_left_corner_radius = bottom_right_corner_radius = pill_radius;
+     }
+ 
+     // Don't round the bottom corners to avoid creating dead space between tabs.
+@@ -520,6 +524,11 @@
+ 
+ float HorizontalTabStyleViews::GetSeparatorOpacity(bool for_layout,
+                                                    bool leading) const {
++  // Leanium: no separator lines between tabs; pills and spacing separate them.
++  // (Layout still reserves the space, so tab sizes do not change.)
++  if (!for_layout) {
++    return 0.0f;
++  }
+   // Do not show separators if the tab strip is in a decluttered state.
+   if (features::IsTabStripDeclutterEnabled() &&
+       delegate_->GetTabCount() >=
+@@ -779,6 +788,23 @@
+ 
+   canvas->ClipPath(fill_path, true);
+ 
++  // Leanium: inactive tabs show as faint pills too (the active tab's colour at
++  // low opacity), so the tab strip reads as a row of capsules.
++  if (selection_state == TabStyle::TabSelectionState::kInactive &&
++      !fill_id.has_value() && !delegate_->IsGlassFrame() &&
++      !helium::ShouldUseNativeFrameMaterials(
++          delegate_->GetBrowserWindowInterface())) {
++    cc::PaintFlags faint_flags;
++    faint_flags.setAntiAlias(true);
++    faint_flags.setColor(SkColorSetA(
++        GetCurrentTabBackgroundColor(TabStyle::TabSelectionState::kActive,
++                                     /*hovered=*/false),
++        0x46));
++    canvas->DrawRect(gfx::ScaleToEnclosingRect(
++                         delegate_->GetView()->GetLocalBounds(), scale),
++                     faint_flags);
++  }
++
+   if (ShouldPaintTabBackgroundColor(selection_state, fill_id.has_value())) {
+     cc::PaintFlags flags;
+     flags.setAntiAlias(true);

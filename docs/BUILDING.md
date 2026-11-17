@@ -63,8 +63,9 @@ you can resume; once the source is prepared, resume with `py -3.12 build.py --ci
 of preparing everything again. (`--ci` skips the preparation; its number is a start time, and a time in
 the year 2100 keeps its 5.5-hour limit from ever stopping the build.)
 
-The installer is written to `build\helium_<version>_x64-installer.exe`; the name still says
-"helium" but the program inside is Leanium. Install it **for the current user only**.
+The installer is written to `build\Leanium-<version>-x64-installer.exe` (`apply.py` renames it in
+`package.py`; the mini-installer and portable zip keep Helium's file names). Install it **for the
+current user only**.
 
 `scripts\update.bat` does all of this (and updating to a new Helium release) in one command; see
 [UPDATING.md](UPDATING.md).
@@ -78,6 +79,9 @@ py -3.12 leanium\scripts\check_leftovers.py .
 It opens the newest `build\*-windows.zip` and searches every file and every translated string and
 WebUI page inside it for "Helium", `helium://` and "Leannium". Credits/licence text and copyright
 notices are allowed on purpose. It ends with `RESULT: no leftover Helium text found.` or a list.
+Given the `helium-windows` folder it also checks the newest installer (without installing it): the uninstall
+entry and Start-menu names, the uninstall registry key and the installer's version info must say Leanium.
+Only the installer: `py -3.12 leanium\scripts\check_leftovers.py --installer <installer.exe>`.
 
 ## Troubleshooting
 

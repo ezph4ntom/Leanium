@@ -1,0 +1,41 @@
+{
+ "size": [
+  1280,
+  800
+ ],
+ "baseline": {
+  "page_left_gap_px": 12,
+  "page_top_y": 67,
+  "page_bottom_gap_px": 12,
+  "corner_diagonal_px": 1,
+  "top_bar_colour": [
+   30,
+   32,
+   32
+  ],
+  "frame_colour": [
+   32,
+   32,
+   32
+  ]
+ },
+ "new": {
+  "page_left_gap_px": 17,
+  "page_top_y": 36,
+  "page_bottom_gap_px": 17,
+  "corner_diagonal_px": 4,
+  "top_bar_colour": [
+   49,
+   22,
+   44
+  ],
+  "frame_colour": [
+   32,
+   32,
+   32
+  ]
+ },
+ "top_bar_band_pixels_changed_pct": 55.8,
+ "tab_band_pixels_changed_pct": 32.0,
+ "page_edge_pixels_changed_pct": 15.4
+}

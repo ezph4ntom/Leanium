@@ -31,11 +31,13 @@ def main():
     hw = Path(a.hw).resolve(); build = hw / "build"
 
     # the newest installer and the zip the checker scans
-    inst = sorted(build.glob("helium_*_x64-installer.exe"), key=lambda p: p.stat().st_mtime)
+    inst = sorted([*build.glob("Leanium-*-x64-installer.exe"), *build.glob("helium_*_x64-installer.exe")],
+                  key=lambda p: p.stat().st_mtime)
     zips = sorted(build.glob("*-windows.zip"), key=lambda p: p.stat().st_mtime)
     if not inst or not zips: fail("no installer or zip in " + str(build) + " (run package.py)")
     inst, zp = inst[-1], zips[-1]
-    ver = re.match(r"helium_(.+)_x64-installer\.exe$", inst.name).group(1)
+    m = re.match(r"(?:Leanium-(.+)-|helium_(.+)_)x64-installer\.exe$", inst.name)
+    ver = m.group(1) or m.group(2)
     if ver not in zp.name: fail(f"newest installer ({inst.name}) and zip ({zp.name}) are different versions")
     if abs(inst.stat().st_mtime - zp.stat().st_mtime) > 600:
         fail(f"{inst.name} and {zp.name} were made more than 10 minutes apart; run package.py again")

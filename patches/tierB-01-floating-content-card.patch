@@ -1,0 +1,54 @@
+--- a/chrome/browser/ui/views/frame/multi_contents_view.cc
++++ b/chrome/browser/ui/views/frame/multi_contents_view.cc
+@@ -59,6 +59,9 @@
+ namespace {
+ constexpr int kSnapDistance = 15;
+ constexpr float kZenTopChromeAttachedThreshold = 0.5f;
++// Leanium: gap around a single page when the rounded frame is on (Helium uses
++// kSplitViewContentInset, 3px), so the page floats like a card.
++constexpr int kLeaniumFloatingContentInset = 8;
+ 
+ bool IsTopChromeAttached(const BrowserView& browser_view,
+                          bool should_show_top_separator) {
+@@ -582,14 +585,14 @@
+   if (IsInSplitView()) {
+     available_space.Inset(split_view_insets_);
+   } else if (should_use_rounded_frame) {
+-    gfx::Insets single_insets(kSplitViewContentInset);
++    gfx::Insets single_insets(kLeaniumFloatingContentInset);
+     single_insets.set_top(attached_chrome.TopInset());
+     single_insets.set_left(contents_separators_.leading_side_chrome_attached
+                                ? 0
+-                               : kSplitViewContentInset);
++                               : kLeaniumFloatingContentInset);
+     single_insets.set_right(contents_separators_.trailing_side_chrome_attached
+                                 ? 0
+-                                : kSplitViewContentInset);
++                                : kLeaniumFloatingContentInset);
+     available_space.Inset(single_insets);
+   }
+   ViewSizes sizes = GetViewSizes(available_space);
+@@ -919,8 +922,9 @@
+       drop_target_view_->side() == MultiContentsDropTargetView::DropSide::BOTTOM;
+   const AttachedChromeEdges attached_chrome = GetAttachedChromeEdges();
+   const bool top_edge_is_window_edge = !attached_chrome.top;
+-  const bool can_use_system_corners =
+-      (is_in_split || should_round_single_contents) && !is_fullscreen;
++  // Leanium: a single floating page keeps the same rounded corners on all
++  // sides instead of following the window corners (the gap is wider now).
++  const bool can_use_system_corners = is_in_split && !is_fullscreen;
+   const bool leading_edge_is_window_edge =
+       !attached_chrome.leading && !is_drop_target_on_start;
+   const bool trailing_edge_is_window_edge =
+--- a/chrome/browser/ui/views/helium/frame_corner_radius.cc
++++ b/chrome/browser/ui/views/helium/frame_corner_radius.cc
+@@ -8,7 +8,8 @@
+ #include "chrome/browser/ui/layout_constants.h"
+ 
+ int GetGenericFrameRadius() {
+-  return 8;
++  // Leanium: rounder cards (page, side panel) for a Zen-style look.
++  return 12;
+ }
+ 
+ #if !BUILDFLAG(IS_MAC)

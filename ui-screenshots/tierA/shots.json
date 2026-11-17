@@ -1,0 +1,31 @@
+{
+ "browser": "Chrome/157.0.8103.78",
+ "title": "Neutral page - Leanium",
+ "app_menu": "C:\\h\\ui-test\\tierA\\shots\\app_menu.png",
+ "app_menu_click": [
+  1252,
+  49
+ ],
+ "about_text": " Settings Search settings Settings Profiles Autofill and passwords Appearance and behavior Privacy and security Performance Search engine Default browser On startup Languages Downloads Accessibility System Reset settings Extensions About Leanium [hidden],:host([hidden]){display:none !important} .icon-arrow-back{--cr-icon-image:url('chrome://resources/images/icon_arrow_back_old.svg')}.icon-arrow-dropdown{--cr-icon-image:url('chrome://resources/images/icon_arrow_dropdown_old.svg')}.icon-arrow-drop-down-cr23{--cr-icon-image:url('chrome://resources/images/icon_arrow_drop_down_cr23_old.svg')}.icon-",
+ "pm_settings_text": " :host{color:var(--cr-primary-text-color);line-height:154%;overflow:hidden;user-select:text} [hidden],:host([hidden]){display:none !important} .icon-arrow-back{--cr-icon-image:url('chrome://resources/images/icon_arrow_back_old.svg')}.icon-arrow-dropdown{--cr-icon-image:url('chrome://resources/images/icon_arrow_dropdown_old.svg')}.icon-arrow-drop-down-cr23{--cr-icon-image:url('chrome://resources/images/icon_arrow_drop_down_cr23_old.svg')}.icon-arrow-drop-up-cr23{--cr-icon-image:url('chrome://resources/images/icon_arrow_drop_up_cr23_old.svg')}.icon-arrow-upward{--cr-icon-image:url('chrome://resources/images/icon_arrow_upward_old.svg')}.icon-arrow-forward{--cr-icon-image:url('chrome://resources/images/icon_arrow_forward_old.svg')}.icon-cancel{--cr-icon-image:url('chrome://resources/images/icon_cancel_old.svg')}.icon-clear{--cr-icon-image:url('chrome://resources/images/icon_clear_old.svg')}.icon-copy-content{--cr-icon-image:url('chrome://resources/images/icon_copy_content_old.svg')}.icon-delete-gray{--cr-icon-image:url('chrome://resources/images/icon_delete_gray_old.svg')}.icon-edit{--cr-icon-image:url('chrome://resources/images/icon_edit_old.svg')}.icon-file{--cr-icon-image:url('chrome://resources/images/icon_filetype_generic_old.svg')}.icon-folder-open{--cr-icon-image:url('chrome://resources/images/icon_folder_open_old.svg')}.icon-picture-delete{--cr-icon-image:url('chrome://resources/images/icon_picture_delete_old.svg')}.icon-expand-less{--cr-icon-image:url('chrome://resources",
+ "ublock_text": [
+  "Parse and enforce cosmetic filters\u00a0",
+  "Ignore generic cosmetic filters\u00a0",
+  "676,625 network filters \uff0b 44,308 cosmetic filters from:",
+  "My filters",
+  "Helium filters (via Leanium)",
+  "Helium filters (via Leanium) \u2013 Annoyances",
+  "Helium filters (via Leanium) \u2013 Unbreak",
+  "uBlock filters",
+  "uBlock filters \u2013 Ads",
+  "uBlock filters \u2013 Badware risks",
+  "uBlock filters \u2013 Privacy",
+  "uBlock filters \u2013 Quick fixes"
+ ],
+ "setup_steps_passed": [
+  "services-page",
+  "search-engines-page",
+  "data-import-page"
+ ],
+ "setup_password_text": "Password manager\n\nLeanium has a built-in password manager. You can find it in Settings, under Autofill and passwords. You can also install another one from the Web Store.\n\nProton Pass\nImport\nPrivacy\nInstall\n\nSecure and privacy-focused password manager with open-source clients. Stores data only in Europe. Free with an optional paid plan.\n\nBitwarden\nImport\nPrivacy\nInstall\n\nSecure and the most popula"
+}

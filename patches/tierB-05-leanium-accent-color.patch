@@ -1,0 +1,70 @@
+--- a/chrome/browser/themes/theme_service.cc
++++ b/chrome/browser/themes/theme_service.cc
+@@ -348,7 +348,27 @@
+   registry->RegisterBooleanPref(prefs::kShouldReadIncomingSyncingThemePrefs,
+                                 true);
+   registry->RegisterStringPref(prefs::kSavedLocalTheme, "");
+-}
++  // Leanium: set once the Leanium accent replaced the grayscale default.
++  registry->RegisterBooleanPref("leanium.theme.accent_applied", false);
++}
++
++namespace {
++
++// Leanium: the accent colour of the cup logo (#B048C4, its most common colour)
++// as a vibrant user-colour theme: the active tab, focus rings and toggles use
++// it, and the frame gets a soft purple tint.
++void ApplyLeaniumAccentTheme(PrefService* pref_service) {
++  pref_service->SetBoolean(prefs::kGrayscaleThemeEnabled, false);
++  pref_service->SetInteger(
++      prefs::kUserColor, static_cast<int>(SkColorSetRGB(0xB0, 0x48, 0xC4)));
++  pref_service->SetInteger(
++      prefs::kBrowserColorVariant,
++      static_cast<int>(ui::mojom::BrowserColorVariant::kVibrant));
++  pref_service->SetString(prefs::kCurrentThemeID,
++                          ThemeService::kUserColorThemeID);
++}
++
++}  // namespace
+ 
+ ThemeService::ThemeService(Profile* profile, const ThemeHelper& theme_helper)
+     : profile_(profile),
+@@ -364,10 +384,24 @@
+ void ThemeService::Init() {
+   theme_helper_->DCheckCalledOnValidSequence();
+ 
+-  if (profile_->IsNewProfile() && !UsingPolicyTheme() &&
+-      !profile_->GetPrefs()->HasPrefPath(prefs::kCurrentThemeID) &&
+-      !profile_->GetPrefs()->HasPrefPath(prefs::kGrayscaleThemeEnabled)) {
+-    profile_->GetPrefs()->SetBoolean(prefs::kGrayscaleThemeEnabled, true);
++  PrefService* const pref_service = profile_->GetPrefs();
++  // Leanium: new profiles get the Leanium accent instead of Helium's grayscale.
++  // A profile that still uses that grayscale default is moved to the accent
++  // once (a colour or extension theme the user picked is left alone).
++  const std::string theme_id = pref_service->GetString(prefs::kCurrentThemeID);
++  const bool new_profile_default =
++      profile_->IsNewProfile() &&
++      !pref_service->HasPrefPath(prefs::kCurrentThemeID) &&
++      !pref_service->HasPrefPath(prefs::kGrayscaleThemeEnabled);
++  const bool grayscale_default =
++      !pref_service->GetBoolean("leanium.theme.accent_applied") &&
++      pref_service->GetBoolean(prefs::kGrayscaleThemeEnabled) &&
++      (theme_id.empty() || theme_id == kUserColorThemeID);
++  if (!UsingPolicyTheme()) {
++    if (new_profile_default || grayscale_default) {
++      ApplyLeaniumAccentTheme(pref_service);
++    }
++    pref_service->SetBoolean("leanium.theme.accent_applied", true);
+   }
+ 
+   InitFromPrefs();
+@@ -497,7 +531,8 @@
+   }
+ 
+   ClearThemeData(/*reset_all_settings=*/true);
+-  profile_->GetPrefs()->SetBoolean(prefs::kGrayscaleThemeEnabled, true);
++  // Leanium: "Reset to default" returns to the Leanium accent theme.
++  ApplyLeaniumAccentTheme(profile_->GetPrefs());
+ 
+   NotifyThemeChanged();
+ }

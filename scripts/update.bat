@@ -150,7 +150,7 @@ echo [6/6] Making the installer...
 echo Checking the result for leftover "Helium" text...
 if defined RUN (echo [dry run] would run: %PY% "%LEAN%\scripts\check_leftovers.py" "%HW%" & set "CHECK=0") else (%PY% "%LEAN%\scripts\check_leftovers.py" "%HW%" & call set "CHECK=%%errorlevel%%")
 set "INST="
-for /f "delims=" %%f in ('dir /b /o:d build\*_x64-installer.exe 2^>nul') do set "INST=%%f"
+for /f "delims=" %%f in ('dir /b /o:d build\*x64-installer.exe 2^>nul') do set "INST=%%f"
 echo.
 echo ================================================================================
 if defined INST (echo  Done. Installer: %HW%\build\%INST%) else (echo  Done, but no installer was found in %HW%\build.)
@@ -166,7 +166,7 @@ call :srcver
 set "LATEST="
 for /f "delims=" %%t in ('git tag --sort^=-v:refname') do if not defined LATEST set "LATEST=%%t"
 set "INST="
-for /f "delims=" %%f in ('dir /b /o:d build\*_x64-installer.exe 2^>nul') do set "INST=%%f"
+for /f "delims=" %%f in ('dir /b /o:d build\*x64-installer.exe 2^>nul') do set "INST=%%f"
 echo   helium-windows is on:   %CUR%
 echo   Newest release known:   %LATEST%   (run "git fetch --tags" in %HW% to refresh)
 if defined SRCVER (echo   build\src prepared for: %SRCVER%) else (echo   build\src prepared for: nothing ^(missing or incomplete^))
