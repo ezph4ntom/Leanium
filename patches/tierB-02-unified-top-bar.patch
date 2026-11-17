@@ -1,0 +1,38 @@
+--- a/chrome/browser/ui/tabs/tab_strip_prefs.cc
++++ b/chrome/browser/ui/tabs/tab_strip_prefs.cc
+@@ -34,8 +34,13 @@
+   registry->RegisterTimePref(prefs::kVerticalTabsEverythingMenuLastPressed,
+                              base::Time());
+ 
++  // Leanium: default to the compact layout (tabs and address bar in one row),
++  // a Zen-style single top bar that keeps the tabs horizontal.
+   registry->RegisterIntegerPref(prefs::kHeliumLayout,
+-                                std::to_underlying(HeliumLayoutType::kClassic));
++                                std::to_underlying(HeliumLayoutType::kCompact));
++  // Leanium: set once an existing profile has been moved to the compact layout
++  // (see HeliumLayoutStateController).
++  registry->RegisterBooleanPref("leanium.browser.compact_layout_applied", false);
+   registry->RegisterBooleanPref(prefs::kHeliumVerticalRightAligned, false);
+   registry->RegisterBooleanPref(prefs::kHeliumZenMode, false);
+   registry->RegisterBooleanPref(prefs::kHeliumZenModeSidebarPinned, false);
+--- a/chrome/browser/ui/helium/helium_layout_state_controller.cc
++++ b/chrome/browser/ui/helium/helium_layout_state_controller.cc
+@@ -19,6 +19,18 @@
+     : pref_service_(pref_service),
+       scoped_unowned_user_data_(browser_window->GetUnownedUserDataHost(),
+                                 *this) {
++  // Leanium: move a profile that is still on the classic layout to the compact
++  // single top bar once. Choosing Classic again in Settings is kept afterwards.
++  static constexpr char kLeaniumCompactLayoutApplied[] =
++      "leanium.browser.compact_layout_applied";
++  if (pref_service_->FindPreference(kLeaniumCompactLayoutApplied) &&
++      !pref_service_->GetBoolean(kLeaniumCompactLayoutApplied)) {
++    pref_service_->SetBoolean(kLeaniumCompactLayoutApplied, true);
++    if (GetBrowserLayout() == HeliumLayoutType::kClassic) {
++      SetBrowserLayout(HeliumLayoutType::kCompact);
++    }
++  }
++
+   pref_change_registrar_.Init(pref_service_);
+ 
+   pref_change_registrar_.AddMultiple(
