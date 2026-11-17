@@ -27,7 +27,31 @@ FILES = [
 ]
 
 
+ASSETS = Path(__file__).resolve().parent.parent / "assets" / "onboarding"
+# The setup page draws Helium's asterisk logo from its bundled design library, and uses its own favicon.
+LOGO_SVELTE = "components/helium_onboarding/node_modules/@imput/helium-prism/dist/components/logos/HeliumLogoRaw.svelte"
+FAVICON = "components/helium_onboarding/public/favicon.png"
+
+
+def replace_logos(src: Path):
+    """Put the Leanium cup in place of Helium's asterisk on the setup page (logo and tab icon)."""
+    changed = 0
+    for rel, new in ((LOGO_SVELTE, (ASSETS / "cup.svg").read_bytes()), (FAVICON, (ASSETS / "favicon.png").read_bytes())):
+        p = src / rel
+        if not p.exists():
+            print(f"  rename_deps: not found (upstream changed?): {rel}")
+            continue
+        if p.read_bytes() != new:
+            p.write_bytes(new)
+            changed += 1
+    if changed:
+        # vite only rebuilds when a listed input changes; index.html is one, so mark it as changed
+        (src / "components/helium_onboarding/index.html").touch()
+    print(f"  rename_deps: replaced {changed} setup-page logo file(s) with the cup")
+
+
 def rename(src: Path):
+    replace_logos(src)
     changed = 0
     for rel in FILES:
         p = src / rel
