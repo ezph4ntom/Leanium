@@ -1,5 +1,8 @@
 # Leanium UI v2 (Zen look, horizontal tabs): report
 
+> On `main`, `ui-screenshots/` keeps six representative screenshots. The full set referenced below
+> (`ui-screenshots/<tier>/...`) is in the history of branch `ui-zen-v2`.
+
 Branch `ui-zen-v2`, created from `main` (`bacd9f7`). `main` and `ui-zen-experiment` are untouched; only
 `ui-zen-v2` was pushed. Base: Helium 0.21.3.1, Chromium 157.0.8103.78. Date: 2026-11-17.
 
