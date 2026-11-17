@@ -1,0 +1,33 @@
+--- a/chrome/browser/themes/theme_service.cc
++++ b/chrome/browser/themes/theme_service.cc
+@@ -367,7 +367,14 @@
+   if (profile_->IsNewProfile() && !UsingPolicyTheme() &&
+       !profile_->GetPrefs()->HasPrefPath(prefs::kCurrentThemeID) &&
+       !profile_->GetPrefs()->HasPrefPath(prefs::kGrayscaleThemeEnabled)) {
+-    profile_->GetPrefs()->SetBoolean(prefs::kGrayscaleThemeEnabled, true);
++    // Leanium: a soft purple theme taken from the cup logo (#AF4BC4, tonal
++    // variant) instead of Helium's grayscale default.
++    profile_->GetPrefs()->SetInteger(
++        prefs::kUserColor, static_cast<int>(SkColorSetRGB(0xAF, 0x4B, 0xC4)));
++    profile_->GetPrefs()->SetInteger(
++        prefs::kBrowserColorVariant,
++        static_cast<int>(ui::mojom::BrowserColorVariant::kTonalSpot));
++    profile_->GetPrefs()->SetString(prefs::kCurrentThemeID, kUserColorThemeID);
+   }
+ 
+   InitFromPrefs();
+@@ -497,7 +504,13 @@
+   }
+ 
+   ClearThemeData(/*reset_all_settings=*/true);
+-  profile_->GetPrefs()->SetBoolean(prefs::kGrayscaleThemeEnabled, true);
++  // Leanium: "Reset to default" returns to the soft purple Leanium theme.
++  profile_->GetPrefs()->SetInteger(
++      prefs::kUserColor, static_cast<int>(SkColorSetRGB(0xAF, 0x4B, 0xC4)));
++  profile_->GetPrefs()->SetInteger(
++      prefs::kBrowserColorVariant,
++      static_cast<int>(ui::mojom::BrowserColorVariant::kTonalSpot));
++  profile_->GetPrefs()->SetString(prefs::kCurrentThemeID, kUserColorThemeID);
+ 
+   NotifyThemeChanged();
+ }
