@@ -34,7 +34,7 @@ mkdir C:\h && cd /d C:\h
 git clone --recurse-submodules https://github.com/imputnet/helium-windows.git
 cd helium-windows
 git checkout --recurse-submodules 0.21.1.1
-git clone https://github.com/YOUR-USERNAME/leanium.git leanium
+git clone https://github.com/ezph4ntom/leanium.git leanium
 ```
 
 Use a **short path** such as `C:\h`, not a deep folder: Chromium has very long file names.
@@ -56,11 +56,25 @@ py -3.12 package.py
 ```
 
 `build.py` downloads Chromium (~30 GB), applies the patches and compiles. If you stop it with Ctrl+C
-you can resume; once the source is prepared, resume with `py -3.12 build.py --ci 1802783400` (the
-number only disables a time limit that `--ci` otherwise imposes) instead of preparing everything again.
+you can resume; once the source is prepared, resume with `py -3.12 build.py --ci 4102444800` instead
+of preparing everything again. (`--ci` skips the preparation; its number is a start time, and a time in
+the year 2100 keeps its 5.5-hour limit from ever stopping the build.)
 
 The installer is written to `build\helium_<version>_x64-installer.exe`; the name still says
 "helium" but the program inside is Leanium. Install it **for the current user only**.
+
+`scripts\update.bat` does all of this (and updating to a new Helium release) in one command; see
+[UPDATING.md](UPDATING.md).
+
+## 5. Check for leftover "Helium" text
+
+```bat
+py -3.12 leanium\scripts\check_leftovers.py .
+```
+
+It opens the newest `build\*-windows.zip` and searches every file and every translated string and
+WebUI page inside it for "Helium", `helium://` and "Leannium". Credits/licence text and copyright
+notices are allowed on purpose. It ends with `RESULT: no leftover Helium text found.` or a list.
 
 ## Troubleshooting
 

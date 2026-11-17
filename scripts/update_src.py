@@ -49,6 +49,23 @@ if icons.exists() and pathfile.exists():
     n = re.sub(r'(<g id="chrome-product" viewBox="0 0 56 56">\s*<path d=")[^"]*(")', lambda m: m.group(1) + d + m.group(2), t)
     if n != t: icons.write_text(n, encoding="utf-8", newline=""); print("updated WebUI icon")
 
+# downloaded parts (setup page, uBlock Origin) that apply.py cannot reach
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import rename_deps
+rename_deps.rename(src)
+
+# translations that build.py already merged into .xtb files: bring them in line with apply.py's
+# current renaming (for example after a fix to apply.py), without preparing build\src again
+from apply import ren
+xtb_changed = 0
+for top in ("chrome", "components", "ui", "content", "extensions", "third_party/blink"):
+    for p in (src / top).rglob("*.xtb"):
+        data = p.read_bytes()
+        if b"Helium" not in data and b"Leannium" not in data: continue
+        t = data.decode("utf-8"); n = ren(t)
+        if n != t: p.write_bytes(n.encode("utf-8")); xtb_changed += 1
+print(f"translations: renamed in {xtb_changed} .xtb file(s)")
+
 # resources (same calls build.py makes)
 sys.path.insert(0, str(repo / "helium-chromium" / "utils"))
 import generate_resources, replace_resources

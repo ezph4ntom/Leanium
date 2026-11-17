@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Leanium: turn a helium-windows checkout (tag 0.21.1.1) into a personal,
+"""Leanium: turn a helium-windows checkout (tested with tags 0.21.1.1 and 0.21.3.1) into a personal,
 rebranded build with the built-in password manager enabled.
 Idempotent. Usage: python apply.py <path-to-helium-windows> [--assets <dir>] [--dry]
 """
@@ -20,14 +20,32 @@ SUBS_LITERAL = [  # (old, new) applied to windows change-branding.patch / nsi
     ('kSafeBrowsingName[] = "helium"', 'kSafeBrowsingName[] = "leanium"'),
     ("HeliumHTM", "LeaniumHTM"), ("HeliumPDF", "LeaniumPDF"),
 ]
-WORD = re.compile(r"\bHelium\b(?!-bin)(?! Authors)")
+# Not \b: Python counts Korean, Amharic, Telugu... letters as word characters, so "\bHelium\b" misses
+# "Helium이" in translations. Only ASCII letters/digits/_ next to it mean "part of a longer name".
+WORD = re.compile(r"(?<![A-Za-z0-9_])Helium(?![A-Za-z0-9_])(?!-bin)(?! Authors)")
 SCHEME = [("helium://", "leanium://"), ('kHeliumUIScheme[] = "helium"', 'kHeliumUIScheme[] = "leanium"'),
           ('u"helium"', 'u"leanium"'), ("'helium:'", "'leanium:'")]   # the internal-page address (was helium://)
+# Sentences that become FALSE for Leanium after the rename (Leanium has the password manager enabled).
+# Applied by ren(), so the setup page (.grdp, via rename_deps.py) and the i18n sources always match.
+PW_OLD = "Leanium doesn't have a built-in password manager. Would you like to install one from the Web Store?"
+PW_NEW = ("Leanium has a built-in password manager. You can find it in Settings, under Autofill and passwords. "
+          "You can also install another one from the Web Store.")
+PW_TRANSLATED = {  # language file -> translated message; every other language shows the English sentence
+    "pt-PT": "O Leanium tem um gestor de palavras-passe integrado. Pode encontrá-lo nas Definições, em "
+             "Preenchimento automático e palavras-passe. Também pode instalar outro a partir da Web Store.",
+}
+FIXES = [(PW_OLD, PW_NEW)]
 def ren(t):
     """Helium -> Leanium, and fix the earlier misspelling Leannium -> Leanium (idempotent)."""
     t = WORD.sub(NEW, t).replace("Leannium", "Leanium").replace("leannium", "leanium")
     for o, n in SCHEME: t = t.replace(o, n)
+    for o, n in FIXES: t = t.replace(o, n)
     return t
+PW_ENTRY = re.compile(r'("source": "' + re.escape(PW_NEW) + r'",\s*"message": ")((?:[^"\\]|\\.)*)(")')
+def fix_translation(t, lang):
+    """The translated text of a fixed sentence still says the old (false) thing: replace it."""
+    new = PW_TRANSLATED.get(lang, PW_NEW)
+    return PW_ENTRY.sub(lambda m: m.group(1) + new + m.group(3), t)
 SKIP = ("update-credits.patch", "licenses-in-credits.patch")
 
 changed = []
@@ -72,7 +90,7 @@ def main():
     # 3. i18n text + name substitution
     for p in [hc / "i18n/source.gen.json"] + sorted((hc / "i18n/translations").glob("*.json")):
         if p.exists():
-            t = rd(p); write(p, ren(t), t, a.dry)
+            t = rd(p); write(p, fix_translation(ren(t), p.stem), t, a.dry)
     for f in ("name_substitution_utils.py", "name_substitution.py"):
         p = hc / "utils" / f
         if p.exists():
@@ -118,6 +136,21 @@ def main():
             if 'id="chrome-product" viewBox="0 0 56 56"' in lines[i - 1] and lines[i].startswith("+") and '<path d="' in lines[i]:
                 lines[i] = re.sub(r'(<path d=")[^"]*(")', lambda m: m.group(1) + new_d + m.group(2), lines[i], count=1)
         write(lp, "\n".join(lines), t, a.dry)
+
+    # 6. build.py: rename Helium in the parts it downloads (setup page, uBlock Origin). Must run after
+    #    build.py's own name substitution and before it appends translations (see rename_deps.py).
+    p = repo / "build.py"
+    if p.exists():
+        t = rd(p); nl = "\r\n" if "\r\n" in t else "\n"
+        anchor = "            # Append translations" + nl
+        hook = ("            # Leanium: rename Helium in downloaded parts (setup page, uBlock Origin)" + nl +
+                "            subprocess.run([sys.executable, r'" + str(Path(__file__).resolve().parent / "rename_deps.py") +
+                "', str(source_tree)], check=True)" + nl + nl)
+        if "# Leanium: rename Helium in downloaded parts" not in t:
+            if anchor not in t:
+                print("WARNING: build.py changed upstream; could not add the rename_deps.py step")
+            else:
+                write(p, t.replace(anchor, hook + anchor, 1), t, a.dry)
 
     print(("[dry] " if a.dry else "") + f"{len(changed)} files changed")
     for c in changed[:60]: print("  ", c)
