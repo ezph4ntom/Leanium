@@ -1,5 +1,8 @@
 # Building Leanium (Windows x64)
 
+You only need this to change Leanium or build it from source. Ready-made installers are on the
+[Releases page](https://github.com/ezph4ntom/Leanium/releases).
+
 Expect 3–6 hours for the first build on a modern 8+ core CPU, and about **60 GB** of free disk space.
 16 GB of RAM works; make sure the page file is large (≈ 32 GB total) because linking is memory hungry.
 
@@ -33,8 +36,8 @@ In an **administrator** *Developer Command Prompt for VS 2022*:
 mkdir C:\h && cd /d C:\h
 git clone --recurse-submodules https://github.com/imputnet/helium-windows.git
 cd helium-windows
-git checkout --recurse-submodules 0.21.1.1
-git clone https://github.com/ezph4ntom/leanium.git leanium
+git checkout --recurse-submodules 0.21.3.1
+git clone https://github.com/ezph4ntom/Leanium.git leanium
 ```
 
 Use a **short path** such as `C:\h`, not a deep folder: Chromium has very long file names.

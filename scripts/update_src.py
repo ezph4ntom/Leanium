@@ -66,6 +66,16 @@ for top in ("chrome", "components", "ui", "content", "extensions", "third_party/
         if n != t: p.write_bytes(n.encode("utf-8")); xtb_changed += 1
 print(f"translations: renamed in {xtb_changed} .xtb file(s)")
 
+# Leanium's own patches (apply.py adds them to Helium's patch list for full builds): apply missing ones here
+import subprocess
+pbin = src / "third_party" / "git" / "usr" / "bin" / "patch.exe"
+for f in sorted((Path(__file__).resolve().parent.parent / "patches").glob("*.patch")):
+    cmd = [str(pbin), "-p1", "--fuzz=0", "-f", "-d", str(src), "-i", str(f)]
+    if subprocess.run(cmd + ["-R", "--dry-run", "-s"], capture_output=True).returncode == 0:
+        print("patch already in build\\src:", f.name); continue
+    subprocess.run(cmd + ["--forward", "--no-backup-if-mismatch"], check=True)
+    print("applied patch:", f.name)
+
 # resources (same calls build.py makes)
 sys.path.insert(0, str(repo / "helium-chromium" / "utils"))
 import generate_resources, replace_resources

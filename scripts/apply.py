@@ -152,6 +152,24 @@ def main():
             else:
                 write(p, t.replace(anchor, hook + anchor, 1), t, a.dry)
 
+    # 7. Leanium's own patches (leanium/patches/*.patch), applied after all of Helium's. For example
+    #    restore-autofill-settings.patch puts back the "Autofill and passwords" settings page that
+    #    helium/settings/remove-autofill.patch hides. They are made against the fully patched files.
+    own = Path(__file__).resolve().parent.parent / "patches"
+    if own.exists():
+        dst = hc / "patches" / "leanium"
+        s = hc / "patches" / "series"; t = rd(s); n = t
+        for f in sorted(own.glob("*.patch")):
+            o = dst / f.name
+            if not o.exists() or o.read_bytes() != f.read_bytes():
+                changed.append(str(o))
+                if not a.dry:
+                    dst.mkdir(parents=True, exist_ok=True); shutil.copyfile(f, o)
+            entry = "leanium/" + f.name
+            if entry not in [l.strip() for l in n.split("\n")]:
+                n = n + ("" if n.endswith("\n") or not n else "\n") + entry + "\n"
+        write(s, n, t, a.dry)
+
     print(("[dry] " if a.dry else "") + f"{len(changed)} files changed")
     for c in changed[:60]: print("  ", c)
 

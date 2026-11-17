@@ -51,6 +51,26 @@ in it **before** starting `update.bat`.
 If `apply.py` reports nothing to change, prints a WARNING, or a patch fails to apply during the build,
 upstream changed something this tool depends on; open an issue.
 
+## Publishing a release
+
+After a build that passed `check_leftovers.py`:
+
+1. Add a `## <version>` section to `CHANGELOG.md` describing what changed, then commit and push.
+   For a second build of the same Helium version, use a suffix: `## 0.21.3.1-r2`.
+2. Check everything without publishing:
+   ```bat
+   py -3.12 C:\h\leanium\scripts\make_release.py C:\h\helium-windows --dry
+   ```
+3. Publish (add `--tag 0.21.3.1-r2` for a rebuild of the same version):
+   ```bat
+   py -3.12 C:\h\leanium\scripts\make_release.py C:\h\helium-windows
+   ```
+
+The script needs the [GitHub CLI](https://cli.github.com/) logged in (`gh auth login`). It refuses to
+publish if the checker finds leftovers, if the installer and zip are from different builds, or if this
+repository has unpushed changes. It uploads `Leanium-<tag>-x64-installer.exe` and `SHA256SUMS.txt`, and
+the release notes name the exact Helium version and commit of this repository.
+
 ## Customising
 
 - **Logo:** edit the geometry in `scripts/make_assets.py`, run `py -3 scripts\make_assets.py`, and
@@ -59,6 +79,9 @@ upstream changed something this tool depends on; open an issue.
   `scripts/make_assets.py`.
 - **Already prepared source:** `scripts/update_src.py` applies rename and logo changes to an existing
   `build\src` so you do not have to download and patch Chromium again.
+- **Chromium changes:** put a patch in `patches/`. `apply.py` adds it to the end of Helium's patch
+  list, and `update_src.py` applies it to an existing `build\src`. Make it against the fully patched
+  file in `build\src` (copy, edit, diff), since it is applied after all of Helium's patches.
 - **Downloaded parts:** the first-run setup page and uBlock Origin are downloaded by `build.py`, so
   `apply.py` cannot edit them in advance. `apply.py` adds a step to `build.py` that runs
   `scripts/rename_deps.py` on them during preparation.
