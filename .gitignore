@@ -8,3 +8,27 @@ __pycache__/
 *.pyc
 .vscode/
 .idea/
+
+# Never commit secrets, password exports or browser profile data
+*.csv
+.env
+.env.*
+*.pem
+*.key
+*.pfx
+*.p12
+Login Data*
+Cookies
+Cookies-journal
+Web Data*
+Local State
+Preferences
+Secure Preferences
+User Data/
+
+# Other build output and logs
+*.dll
+*.pak
+*.msi
+*.pdb
+*.log
