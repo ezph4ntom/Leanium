@@ -287,6 +287,9 @@ def check_installer(target, seven_zip=None):
 
 
 def main():
+    # snippets from binary files can hold characters the Windows console cannot print
+    for stream in (sys.stdout, sys.stderr):
+        stream.reconfigure(errors="replace")
     if "--installer" in sys.argv:
         args = [a for a in sys.argv[1:] if not a.startswith("--")]
         sz = None
