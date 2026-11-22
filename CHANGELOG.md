@@ -3,6 +3,15 @@
 Leanium versions follow the Helium release they are built from. A rebuild of the same Helium
 version gets a suffix, for example `0.21.3.1-r2`.
 
+## 0.21.3.1-ui-r3
+
+Based on Helium 0.21.3.1 (Chromium 157.0.8103.78). Installer fix for 0.21.3.1-ui-r2.
+
+- Installing over an earlier build of the same version now really replaces the browser files.
+  Before, the installer kept the old files when their sizes matched, so installing 0.21.3.1-ui-r2
+  over 0.21.3.1-ui changed nothing and the theme fix never arrived.
+- Includes the theme fix from 0.21.3.1-ui-r2 (the chosen colour is kept after a restart).
+
 ## 0.21.3.1-ui-r2
 
 Based on Helium 0.21.3.1 (Chromium 157.0.8103.78). Bug fix for 0.21.3.1-ui.
