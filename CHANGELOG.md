@@ -3,6 +3,13 @@
 Leanium versions follow the Helium release they are built from. A rebuild of the same Helium
 version gets a suffix, for example `0.21.3.1-r2`.
 
+## 0.21.3.1-ui-r2
+
+Based on Helium 0.21.3.1 (Chromium 157.0.8103.78). Bug fix for 0.21.3.1-ui.
+
+- The colour you pick in *Customize Leanium* is kept after closing and reopening the browser.
+  Before, the grey colour was replaced by the purple accent at every start.
+
 ## 0.21.3.1-ui
 
 Based on Helium 0.21.3.1 (Chromium 157.0.8103.78). Same browser as 0.21.3.1 with a new look.
