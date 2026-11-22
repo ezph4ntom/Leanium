@@ -1,0 +1,17 @@
+--- a/chrome/installer/util/duplicate_tree_detector.cc
++++ b/chrome/installer/util/duplicate_tree_detector.cc
+@@ -54,6 +54,14 @@
+       return false;
+     }
+ #endif
++    // Leanium: equal sizes are not enough. A rebuild of the same version often
++    // keeps every file size, and the packaging gives every file the same fixed
++    // time, so the installer kept the old files. Compare the contents too.
++    if (!base::ContentsEqual(src_path, dest_path)) {
++      VLOG(1) << "Files differ in contents: " << src_path << " vs "
++              << dest_path;
++      return false;
++    }
+     // The files are identical.
+     return true;
+   }
