@@ -58,7 +58,19 @@
    }
  
    InitFromPrefs();
-@@ -497,7 +531,8 @@
+@@ -492,12 +526,20 @@
+     return;
+   }
+ 
++  // Leanium: at startup InitFromPrefs() lands here for the grey theme (and the
++  // plain default colour). Keep that saved choice: only a real "Reset to
++  // default" (made while the browser is running) switches to the accent.
++  if (!ready_) {
++    return;
++  }
++
+   if (ready_) {
+     base::RecordAction(base::UserMetricsAction("Themes_Reset"));
    }
  
    ClearThemeData(/*reset_all_settings=*/true);
