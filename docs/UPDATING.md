@@ -83,5 +83,6 @@ the release notes name the exact Helium version and commit of this repository.
   list, and `update_src.py` applies it to an existing `build\src`. Make it against the fully patched
   file in `build\src` (copy, edit, diff), since it is applied after all of Helium's patches.
 - **Downloaded parts:** the first-run setup page and uBlock Origin are downloaded by `build.py`, so
-  `apply.py` cannot edit them in advance. `apply.py` adds a step to `build.py` that runs
-  `scripts/rename_deps.py` on them during preparation.
+  `apply.py` cannot edit them in advance. `apply.py` adds a step to the preparation (in
+  `scripts/source.py` since Helium 0.22, in `build.py` before) that runs `scripts/rename_deps.py`
+  on them.

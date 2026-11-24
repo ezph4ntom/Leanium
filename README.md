@@ -49,7 +49,7 @@ It installs **next to** Helium under its own name, icon and profile, so you can 
 Each release lists a SHA-256 checksum. To verify your download in PowerShell:
 
 ```powershell
-Get-FileHash .\Leanium-0.21.3.1-x64-installer.exe
+Get-FileHash .\Leanium-0.22.2.1-x64-installer.exe
 ```
 
 ## What is different from Helium
@@ -75,8 +75,10 @@ Origin) comes from Helium unchanged. A before/after comparison is in
 
 ## Good to know
 
-- **No automatic updates.** Watch this repository's releases (*Watch → Custom → Releases*) to be
-  told when a new build is out. New builds follow Helium releases, which carry Chromium security fixes.
+- **No automatic updates.** Since 0.22.2.1 the About page (*⋮ → Help → About Leanium*) says when a
+  newer release is on GitHub, with a download link; it never downloads or installs anything itself.
+  You can also watch this repository's releases (*Watch → Custom → Releases*). New builds follow
+  Helium releases, which carry Chromium security fixes.
 - **Saved passwords are local only and are not synced** to any account or device (the password
   settings page says so too). **Export them regularly** as a backup:
   *⋮ → Password Manager → Settings → Export passwords*. After each update, run the short
@@ -106,7 +108,7 @@ In short (Windows x64, Visual Studio 2022, Python 3.12, about 60 GB free disk an
 ```bat
 git clone --recurse-submodules https://github.com/imputnet/helium-windows.git
 cd helium-windows
-git checkout --recurse-submodules 0.21.3.1
+git checkout --recurse-submodules 0.22.2.1
 git clone https://github.com/ezph4ntom/Leanium.git leanium
 py -3.12 leanium\scripts\apply.py . --assets leanium\assets\branding
 py -3.12 build.py

@@ -13,7 +13,7 @@ Expect 3–6 hours for the first build on a modern 8+ core CPU, and about **60 G
 - **7-Zip**
 - **Visual Studio 2022 Community** with the *Desktop development with C++* workload, plus the
   individual components *C++ MFC for latest v143 build tools* and *C++ ATL for latest v143 build tools*
-- **Windows SDK 10.0.28000** (Chromium 157 requires exactly this one; it is *not* offered by the
+- **Windows SDK 10.0.28000** (Chromium 157 and 158 require exactly this one; it is *not* offered by the
   Visual Studio installer): `winget install Microsoft.WindowsSDK.10.0.28000`, and make sure
   *Debugging Tools for Windows* is included
 - Python packages: `py -3.12 -m pip install httplib2==0.22.0 Pillow`
@@ -36,7 +36,7 @@ In an **administrator** *Developer Command Prompt for VS 2022*:
 mkdir C:\h && cd /d C:\h
 git clone --recurse-submodules https://github.com/imputnet/helium-windows.git
 cd helium-windows
-git checkout --recurse-submodules 0.21.3.1
+git checkout --recurse-submodules 0.22.2.1
 git clone https://github.com/ezph4ntom/Leanium.git leanium
 ```
 

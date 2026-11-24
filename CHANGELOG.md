@@ -3,6 +3,21 @@
 Leanium versions follow the Helium release they are built from. A rebuild of the same Helium
 version gets a suffix, for example `0.21.3.1-r2`.
 
+## 0.22.2.1
+
+Based on Helium 0.22.2.1 (Chromium 158.0.8127.36). Newer Chromium with its security fixes.
+
+- The About page (*⋮ → Help → About Leanium*) now says when a newer Leanium is on GitHub, with a
+  link to download it. It only asks GitHub while that page is open and never downloads or installs
+  anything by itself. It follows the *Allow automatic browser updates* switch in
+  *Settings → Privacy and security → Leanium services*.
+- The "Import from other browsers" step of the first-run setup shows the Leanium cup instead of
+  Helium's icon (the last visible Helium logo).
+- Includes everything from 0.21.3.1-ui-r3: the new look, the kept theme colour, and the installer
+  that replaces the files of a same-version rebuild.
+- Scripts: support Helium 0.22's new build layout; `update_src.py` only copies the logo files that
+  changed, so a small change no longer recompiles for an hour.
+
 ## 0.21.3.1-ui-r3
 
 Based on Helium 0.21.3.1 (Chromium 157.0.8103.78). Installer fix for 0.21.3.1-ui-r2.
