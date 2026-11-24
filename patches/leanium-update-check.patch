@@ -129,7 +129,7 @@
 +            trigger: "The user opens the About Leanium page."
 +            data: "None. A plain request without cookies."
 +            destination: OTHER
-+            destination_other: "GitHub (api.github.com)"
++            destination_other: "GitHub, api.github.com"
 +          }
 +          policy {
 +            cookies_allowed: NO
