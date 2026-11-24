@@ -1,0 +1,219 @@
+--- a/chrome/browser/ui/webui/help/BUILD.gn
++++ b/chrome/browser/ui/webui/help/BUILD.gn
+@@ -71,6 +71,19 @@
+       ]
+     } else if (!enable_winsparkle) {
+       sources = [ "version_updater_basic.cc" ]
++
++      # Leanium: the About page asks GitHub for the newest Leanium release.
++      deps += [
++        "//chrome/browser:browser_process",
++        "//chrome/browser/profiles:profile",
++        "//chrome/common:constants",
++        "//components/helium_services",
++        "//content/public/browser",
++        "//net",
++        "//net/traffic_annotation",
++        "//services/network/public/cpp",
++        "//url",
++      ]
+     }
+   }
+ 
+--- a/chrome/browser/ui/webui/help/version_updater_basic.cc
++++ b/chrome/browser/ui/webui/help/version_updater_basic.cc
+@@ -5,11 +5,174 @@
+ #include <memory>
+ #include <string>
+ 
++#include "build/build_config.h"
+ #include "chrome/browser/ui/webui/help/version_updater.h"
+ #include "chrome/browser/upgrade_detector/upgrade_detector.h"
+ 
++#if BUILDFLAG(IS_WIN)
++#include <optional>
++#include <string_view>
++#include <utility>
++
++#include "base/functional/bind.h"
++#include "base/json/json_reader.h"
++#include "base/memory/raw_ptr.h"
++#include "base/memory/weak_ptr.h"
++#include "base/strings/escape.h"
++#include "base/strings/string_util.h"
++#include "base/strings/utf_string_conversions.h"
++#include "base/values.h"
++#include "base/version.h"
++#include "chrome/browser/browser_process.h"
++#include "chrome/browser/profiles/profile.h"
++#include "chrome/common/chrome_constants.h"
++#include "components/helium_services/helium_services_helpers.h"
++#include "content/public/browser/web_contents.h"
++#include "net/base/load_flags.h"
++#include "net/traffic_annotation/network_traffic_annotation.h"
++#include "services/network/public/cpp/resource_request.h"
++#include "services/network/public/cpp/shared_url_loader_factory.h"
++#include "services/network/public/cpp/simple_url_loader.h"
++#include "url/gurl.h"
++#endif  // BUILDFLAG(IS_WIN)
++
+ namespace {
+ 
++#if BUILDFLAG(IS_WIN)
++
++// Leanium: there is no automatic updater (Helium's would install Helium), so
++// the About page asks GitHub for the newest Leanium release instead and, if it
++// is newer, shows a link to it. Nothing is downloaded or installed. The check
++// only runs while the About page is open, and only if "browser updates" is on
++// in Settings -> Privacy and security -> Leanium services.
++constexpr char kLeaniumLatestReleaseUrl[] =
++    "https://api.github.com/repos/ezph4ntom/Leanium/releases/latest";
++constexpr char kLeaniumReleasesPrefix[] =
++    "https://github.com/ezph4ntom/Leanium/releases/";
++constexpr size_t kMaxResponseSize = 1024 * 1024;
++
++// "v0.22.2.1", "0.22.2.1" or "v0.21.3.1-ui-r3" -> "0.22.2.1" / "0.21.3.1".
++std::string VersionFromTag(std::string_view tag) {
++  if (!tag.empty() && (tag.front() == 'v' || tag.front() == 'V')) {
++    tag.remove_prefix(1);
++  }
++  size_t end = 0;
++  while (end < tag.size() &&
++         (base::IsAsciiDigit(tag[end]) || tag[end] == '.')) {
++    ++end;
++  }
++  return std::string(tag.substr(0, end));
++}
++
++class VersionUpdaterBasic : public VersionUpdater {
++ public:
++  explicit VersionUpdaterBasic(Profile* profile) : profile_(profile) {}
++  VersionUpdaterBasic(const VersionUpdaterBasic&) = delete;
++  VersionUpdaterBasic& operator=(const VersionUpdaterBasic&) = delete;
++  ~VersionUpdaterBasic() override = default;
++
++  // VersionUpdater implementation.
++  void CheckForUpdate(StatusCallback callback, PromoteCallback) override {
++    weak_factory_.InvalidateWeakPtrs();
++    loader_.reset();
++
++    if (UpgradeDetector::GetInstance()->is_upgrade_available()) {
++      callback.Run(NEARLY_UPDATED, 0, false, false, std::string(), 0,
++                   std::u16string());
++      return;
++    }
++    if (!profile_ || !g_browser_process ||
++        !helium::ShouldAccessUpdateService(*profile_->GetPrefs())) {
++      callback.Run(DISABLED, 0, false, false, std::string(), 0,
++                   std::u16string());
++      return;
++    }
++
++    callback.Run(CHECKING, 0, false, false, std::string(), 0,
++                 std::u16string());
++
++    auto request = std::make_unique<network::ResourceRequest>();
++    request->url = GURL(kLeaniumLatestReleaseUrl);
++    request->method = "GET";
++    request->credentials_mode = network::mojom::CredentialsMode::kOmit;
++    request->load_flags = net::LOAD_DISABLE_CACHE;
++    request->headers.SetHeader("Accept", "application/vnd.github+json");
++
++    net::NetworkTrafficAnnotationTag traffic_annotation =
++        net::DefineNetworkTrafficAnnotation("leanium_update_check", R"(
++          semantics {
++            sender: "Leanium About page"
++            description:
++              "Asks GitHub for the newest Leanium release, to tell the user "
++              "when a newer version is available."
++            trigger: "The user opens the About Leanium page."
++            data: "None. A plain request without cookies."
++            destination: OTHER
++            destination_other: "GitHub (api.github.com)"
++          }
++          policy {
++            cookies_allowed: NO
++            setting:
++              "Settings -> Privacy and security -> Leanium services -> "
++              "browser updates."
++          })");
++
++    loader_ = network::SimpleURLLoader::Create(std::move(request),
++                                               traffic_annotation);
++    loader_->SetRetryOptions(
++        1, network::SimpleURLLoader::RETRY_ON_NETWORK_CHANGE);
++    loader_->DownloadToString(
++        g_browser_process->shared_url_loader_factory().get(),
++        base::BindOnce(&VersionUpdaterBasic::OnReleaseInfo,
++                       weak_factory_.GetWeakPtr(), std::move(callback)),
++        kMaxResponseSize);
++  }
++
++ private:
++  void OnReleaseInfo(StatusCallback callback,
++                     std::optional<std::string> body) {
++    loader_.reset();
++    // Any problem (offline, GitHub down, unexpected answer): show nothing.
++    Status status = DISABLED;
++    std::u16string message;
++
++    std::optional<base::DictValue> release;
++    if (body) {
++      release = base::JSONReader::ReadDict(*body, base::JSON_PARSE_RFC);
++    }
++    const std::string* tag = release ? release->FindString("tag_name") : nullptr;
++    const std::string* page = release ? release->FindString("html_url") : nullptr;
++    if (tag && page &&
++        base::StartsWith(*page, kLeaniumReleasesPrefix,
++                         base::CompareCase::SENSITIVE) &&
++        GURL(*page).is_valid()) {
++      const base::Version latest(VersionFromTag(*tag));
++      const base::Version current(chrome::kHeliumVersion);
++      if (latest.IsValid() && current.IsValid()) {
++        if (latest > current) {
++          // Shown as-is (with a link) by the About page; it allows <a href>
++          // to https:// addresses with target="_blank".
++          status = FAILED_HTTP;
++          message = u"Leanium " +
++                    base::EscapeForHTML(base::UTF8ToUTF16(*tag)) +
++                    u" is available. <a href=\"" +
++                    base::EscapeForHTML(base::UTF8ToUTF16(*page)) +
++                    u"\" target=\"_blank\">Download it from GitHub</a>";
++        } else {
++          status = UPDATED;
++        }
++      }
++    }
++    callback.Run(status, 0, false, false, std::string(), 0, message);
++  }
++
++  raw_ptr<Profile> profile_;
++  std::unique_ptr<network::SimpleURLLoader> loader_;
++  base::WeakPtrFactory<VersionUpdaterBasic> weak_factory_{this};
++};
++
++#else  // BUILDFLAG(IS_WIN)
++
+ // Bare bones implementation just checks if a new version is ready.
+ class VersionUpdaterBasic : public VersionUpdater {
+  public:
+@@ -27,9 +190,19 @@
+   }
+ };
+ 
++#endif  // BUILDFLAG(IS_WIN)
++
+ }  // namespace
+ 
+ std::unique_ptr<VersionUpdater> VersionUpdater::Create(
+     content::WebContents* web_contents) {
++#if BUILDFLAG(IS_WIN)
++  Profile* profile =
++      web_contents
++          ? Profile::FromBrowserContext(web_contents->GetBrowserContext())
++          : nullptr;
++  return std::make_unique<VersionUpdaterBasic>(profile);
++#else
+   return std::make_unique<VersionUpdaterBasic>();
++#endif
+ }
