@@ -236,11 +236,26 @@ def doc_icon(logo):
     img.alpha_composite(logo.resize((side, side), Image.LANCZOS), (int(132 * k - side / 2), int(150 * k - side / 2)))
     return img.resize((256, 256), Image.LANCZOS)
 
+def browser_tile(logo):
+    """App-style icon (white rounded tile + cup) for the setup page's 'Import from other browsers' step,
+    the same 256x256 format as the other browsers' icons there (it replaces Helium's asterisk icon)."""
+    k = 4; S = 256 * k
+    img = Image.new("RGBA", (S, S), (0, 0, 0, 0)); d = ImageDraw.Draw(img)
+    box = [17 * k, 17 * k, 240 * k, 240 * k]
+    d.rounded_rectangle(box, radius=52 * k, fill=(250, 250, 252, 255), outline=(222, 222, 230, 255), width=2 * k)
+    side = 168 * k   # the cup's canvas; the cup itself fills almost all of it
+    img.alpha_composite(logo.resize((side, side), Image.LANCZOS), (int(128.5 * k - side / 2), int(128.5 * k - side / 2)))
+    return img.resize((256, 256), Image.LANCZOS)
+
+def write_browser_tile(logo):
+    browser_tile(logo).save(ASSETS / "onboarding" / "browser_icon.avif", quality=90)
+
 def write_rasters(out, repo):
     logo = render_logo(1024); logo.save(ASSETS / "logo_1024.png")
     (out / "app_icon").mkdir(parents=True, exist_ok=True)
     logo.save(out / "app_icon" / "raw.png")
     doc_icon(logo).save(out / "app_icon" / "file.png")
+    write_browser_tile(logo)
     wordmark(logo, 140, 32, (0, 0, 0)).save(out / "product_logo.png")
     wordmark(logo, 280, 64, (0, 0, 0)).save(out / "product_logo_200.png")
     wordmark(logo, 140, 32, (255, 255, 255)).save(out / "product_logo_white.png")

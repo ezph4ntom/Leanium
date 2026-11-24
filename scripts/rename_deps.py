@@ -31,12 +31,15 @@ ASSETS = Path(__file__).resolve().parent.parent / "assets" / "onboarding"
 # The setup page draws Helium's asterisk logo from its bundled design library, and uses its own favicon.
 LOGO_SVELTE = "components/helium_onboarding/node_modules/@imput/helium-prism/dist/components/logos/HeliumLogoRaw.svelte"
 FAVICON = "components/helium_onboarding/public/favicon.png"
+# ...and Helium's app icon in the "Import from other browsers" step (BrowserImportGraphic.svelte).
+IMPORT_ICON = "components/helium_onboarding/node_modules/nonfree-icons/browsers/helium.avif"
 
 
 def replace_logos(src: Path):
     """Put the Leanium cup in place of Helium's asterisk on the setup page (logo and tab icon)."""
     changed = 0
-    for rel, new in ((LOGO_SVELTE, (ASSETS / "cup.svg").read_bytes()), (FAVICON, (ASSETS / "favicon.png").read_bytes())):
+    for rel, new in ((LOGO_SVELTE, (ASSETS / "cup.svg").read_bytes()), (FAVICON, (ASSETS / "favicon.png").read_bytes()),
+                     (IMPORT_ICON, (ASSETS / "browser_icon.avif").read_bytes())):
         p = src / rel
         if not p.exists():
             print(f"  rename_deps: not found (upstream changed?): {rel}")
