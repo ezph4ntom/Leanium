@@ -171,7 +171,7 @@ echo   helium-windows is on:   %CUR%
 echo   Newest release known:   %LATEST%   (run "git fetch --tags" in %HW% to refresh)
 if defined SRCVER (echo   build\src prepared for: %SRCVER%) else (echo   build\src prepared for: nothing ^(missing or incomplete^))
 if defined INST (echo   Newest installer:       build\%INST%) else (echo   Newest installer:       none)
-findstr /c:"Leanium: rename Helium in downloaded parts" build.py >nul && (echo   Leanium changes:        applied) || (echo   Leanium changes:        NOT applied ^(apply.py has not run on this version^))
+findstr /m /c:"Leanium: rename Helium in downloaded parts" build.py scripts\source.py >nul 2>&1 && (echo   Leanium changes:        applied) || (echo   Leanium changes:        NOT applied ^(apply.py has not run on this version^))
 exit /b 0
 
 rem ---------------------------------------------------------------- helpers
@@ -190,8 +190,8 @@ exit /b 0
 
 :checkhook
 if defined RUN exit /b 0
-findstr /c:"Leanium: rename Helium in downloaded parts" build.py >nul && exit /b 0
-echo WARNING: apply.py could not add its step to build.py ^(see the WARNING above^).
+findstr /m /c:"Leanium: rename Helium in downloaded parts" build.py scripts\source.py >nul 2>&1 && exit /b 0
+echo WARNING: apply.py could not add its step to build.py / scripts\source.py ^(see the WARNING above^).
 echo The first-run page and uBlock Origin would still say "Helium".
 call :ask "Continue anyway?"
 exit /b

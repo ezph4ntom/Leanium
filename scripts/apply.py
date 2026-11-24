@@ -107,13 +107,16 @@ def main():
         write(p, n, t, a.dry)
 
     # 4a. installer file name: Leanium-<version>-x64-installer.exe (was helium_<version>_x64-installer.exe)
-    p = repo / "package.py"
+    #     Helium 0.22 moved this from package.py into scripts/installer.py.
+    p = repo / "scripts/installer.py"
+    if not p.exists():
+        p = repo / "package.py"
     if p.exists():
         t = rd(p)
         n = t.replace("output_dir / f'helium_{version}_{target_cpu}-installer.exe'",
                       "output_dir / f'Leanium-{version}-{target_cpu}-installer.exe'")
         if n == t and "f'Leanium-{version}-{target_cpu}-installer.exe'" not in t:
-            print("WARNING: package.py changed upstream; the installer keeps Helium's file name")
+            print(f"WARNING: {p.name} changed upstream; the installer keeps Helium's file name")
         write(p, n, t, a.dry)
 
     # 4b. Windows fix: 7-Zip can create symlinks that raise "Access is denied" in the merge step
@@ -151,18 +154,26 @@ def main():
 
     # 6. build.py: rename Helium in the parts it downloads (setup page, uBlock Origin). Must run after
     #    build.py's own name substitution and before it appends translations (see rename_deps.py).
-    p = repo / "build.py"
+    #    Helium 0.22 moved this step from build.py into scripts/source.py (substitute()).
+    rd_script = str(Path(__file__).resolve().parent / "rename_deps.py")
+    p = repo / "scripts/source.py"
     if p.exists():
         t = rd(p); nl = "\r\n" if "\r\n" in t else "\n"
+        anchor = "    i18n_apply.apply_translations(SOURCE_TREE)" + nl
+        hook = ("    # Leanium: rename Helium in downloaded parts (setup page, uBlock Origin)" + nl +
+                "    subprocess.run([sys.executable, r'" + rd_script + "', str(SOURCE_TREE)], check=True)" + nl + nl)
+    else:
+        p = repo / "build.py"
+        t = rd(p) if p.exists() else ""; nl = "\r\n" if "\r\n" in t else "\n"
         anchor = "            # Append translations" + nl
         hook = ("            # Leanium: rename Helium in downloaded parts (setup page, uBlock Origin)" + nl +
-                "            subprocess.run([sys.executable, r'" + str(Path(__file__).resolve().parent / "rename_deps.py") +
+                "            subprocess.run([sys.executable, r'" + rd_script +
                 "', str(source_tree)], check=True)" + nl + nl)
-        if "# Leanium: rename Helium in downloaded parts" not in t:
-            if anchor not in t:
-                print("WARNING: build.py changed upstream; could not add the rename_deps.py step")
-            else:
-                write(p, t.replace(anchor, hook + anchor, 1), t, a.dry)
+    if t and "# Leanium: rename Helium in downloaded parts" not in t:
+        if anchor not in t:
+            print(f"WARNING: {p.name} changed upstream; could not add the rename_deps.py step")
+        else:
+            write(p, t.replace(anchor, hook + anchor, 1), t, a.dry)
 
     # 7. Leanium's own patches (leanium/patches/*.patch), applied after all of Helium's. For example
     #    restore-autofill-settings.patch puts back the "Autofill and passwords" settings page that
