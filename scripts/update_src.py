@@ -76,11 +76,28 @@ for f in sorted((Path(__file__).resolve().parent.parent / "patches").glob("*.pat
     subprocess.run(cmd + ["--forward", "--no-backup-if-mismatch"], check=True)
     print("applied patch:", f.name)
 
-# resources (same calls build.py makes)
+# resources (same steps as Helium's build: generate, then copy into build\src). Helium's own copy
+# function rewrites every file, which makes ninja recompile everything that uses them (a one-line fix
+# then took ~1 hour). Copy only the files whose contents really changed.
+import shutil
 sys.path.insert(0, str(repo / "helium-chromium" / "utils"))
-import generate_resources, replace_resources
-generate_resources.generate_resources(repo / "resources" / "generate_resources.txt", repo / "resources")
-replace_resources.copy_resources(repo / "resources" / "platform_resources.txt", repo / "resources", src)
-generate_resources.generate_resources(repo / "helium-chromium" / "resources" / "generate_resources.txt", repo / "helium-chromium" / "resources")
-replace_resources.copy_resources(repo / "helium-chromium" / "resources" / "helium_resources.txt", repo / "helium-chromium" / "resources", src)
-print("resources updated - now run build.py")
+import generate_resources
+
+def copy_changed(listing, res_dir, dst_root):
+    copied = kept = 0
+    for n, line in enumerate(listing.read_text(encoding="utf-8").splitlines(), 1):
+        parts = line.split()
+        if not parts or parts[0].startswith("#"): continue
+        if len(parts) != 2: raise ValueError(f"line {n} of {listing} is invalid")
+        s, d = res_dir / parts[0], dst_root / parts[1]
+        if d.exists() and d.read_bytes() == s.read_bytes(): kept += 1; continue
+        shutil.copyfile(s, d); copied += 1; print("copied", parts[0], "->", parts[1])
+    return copied, kept
+
+total_copied = total_kept = 0
+for res, listing in ((repo / "resources", "platform_resources.txt"),
+                     (repo / "helium-chromium" / "resources", "helium_resources.txt")):
+    generate_resources.generate_resources(res / "generate_resources.txt", res)
+    c, k = copy_changed(res / listing, res, src)
+    total_copied += c; total_kept += k
+print(f"resources: {total_copied} copied, {total_kept} already up to date - now run build.py")
