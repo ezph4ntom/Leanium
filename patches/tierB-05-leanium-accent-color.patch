@@ -1,14 +1,13 @@
 --- a/chrome/browser/themes/theme_service.cc
 +++ b/chrome/browser/themes/theme_service.cc
-@@ -348,7 +348,27 @@
-   registry->RegisterBooleanPref(prefs::kShouldReadIncomingSyncingThemePrefs,
-                                 true);
+@@ -330,8 +330,28 @@
+   registry->RegisterBooleanPref(prefs::kBrowserFollowsSystemThemeColors,
+                                 BUILDFLAG(IS_CHROMEOS));
    registry->RegisterStringPref(prefs::kSavedLocalTheme, "");
--}
 +  // Leanium: set once the Leanium accent replaced the grayscale default.
 +  registry->RegisterBooleanPref("leanium.theme.accent_applied", false);
-+}
-+
+ }
+ 
 +namespace {
 +
 +// Leanium: the accent colour of the cup logo (#B048C4, its most common colour)
@@ -26,10 +25,11 @@
 +}
 +
 +}  // namespace
- 
++
  ThemeService::ThemeService(Profile* profile, const ThemeHelper& theme_helper)
      : profile_(profile),
-@@ -364,10 +384,24 @@
+       theme_helper_(theme_helper),
+@@ -346,10 +366,24 @@
  void ThemeService::Init() {
    theme_helper_->DCheckCalledOnValidSequence();
  
@@ -58,7 +58,7 @@
    }
  
    InitFromPrefs();
-@@ -492,12 +526,20 @@
+@@ -474,12 +508,20 @@
      return;
    }
  

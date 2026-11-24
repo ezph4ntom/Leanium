@@ -1,9 +1,9 @@
 --- a/chrome/browser/resources/new_tab_page/app.ts
 +++ b/chrome/browser/resources/new_tab_page/app.ts
-@@ -6,6 +6,8 @@
- import 'chrome://new-tab-page/shared/customize_buttons/customize_buttons.js';
- import 'chrome://resources/cr_components/composebox/composebox_voice_search.js';
- import 'chrome://resources/cr_components/search/animated_glow.js';
+@@ -3,6 +3,8 @@
+ // found in the LICENSE file.
+ 
+ import '/strings.m.js';
 +// Leanium: the search box is back on the new-tab page.
 +import './ntp_searchbox.js';
  
@@ -30,7 +30,7 @@
            <cr-most-visited id="mostVisited" .theme="${this.theme_?.mostVisited || null}"
 --- a/chrome/browser/resources/new_tab_page/app.css
 +++ b/chrome/browser/resources/new_tab_page/app.css
-@@ -184,6 +184,38 @@
+@@ -190,6 +190,38 @@
    z-index: 2;
  }
  
@@ -71,9 +71,9 @@
       display: none. */
 --- a/chrome/browser/ui/webui/new_tab_page/new_tab_page_ui.cc
 +++ b/chrome/browser/ui/webui/new_tab_page/new_tab_page_ui.cc
-@@ -843,10 +843,11 @@
-            base::FeatureList::IsEnabled(
-                omnibox::kComposeboxPersistentAimButtonWithX));
+@@ -895,10 +895,11 @@
+   dict.Set("dynamicAimFulfillmentEnabled",
+            omnibox::IsDynamicAimFulfillmentEnabledForRealbox());
  
 +  // Leanium: no voice or Lens buttons in the new-tab search box (both depend on
 +  // Google services).
